@@ -1,0 +1,58 @@
+<style>
+
+<div id="single" dir="rtl">
+    <div class="common">Single</div>
+</div>
+
+<div id="both" dir="ltr">
+    <div class="common">Both</div>
+</div>
+
+
+
+
+#single, #both{
+    width: 100px;
+    height: 100px;
+    overflow: auto;
+    margin: 0 auto;
+    border: 1px solid gray;
+}
+
+
+.common{
+    height: 150px;
+    width: 150px;
+}
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+.Container
+{
+    width: 200px;
+    overflow-y: auto;
+}
+.Content
+{
+    width: 300px;
+}
+
+.Flipped, .Flipped .Content
+{
+    transform:rotateX(180deg);
+    -ms-transform:rotateX(180deg); /* IE 9 */
+    -webkit-transform:rotateX(180deg); /* Safari and Chrome */
+}
+</style>

@@ -1,0 +1,69 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+
+<web-app>
+	<servlet>
+		<servlet-name>Hello</servlet-name>
+		<display-name>Hello</display-name>
+		<description></description>
+		<servlet-class>Hello</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>Register</servlet-name>
+		<display-name>Register</display-name>
+		<description></description>
+		<servlet-class>Register</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>UserList</servlet-name>
+		<display-name>UserList</display-name>
+		<description></description>
+		<servlet-class>UserList</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>Connect</servlet-name>
+		<display-name>Connect</display-name>
+		<description></description>
+		<servlet-class>Connect</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>Link</servlet-name>
+		<display-name>Link</display-name>
+		<description></description>
+		<servlet-class>Link</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>Chat</servlet-name>
+		<display-name>Chat</display-name>
+		<description></description>
+		<servlet-class>Chat</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>Hello</servlet-name>
+		<url-pattern>/Hello</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Register</servlet-name>
+		<url-pattern>/Register</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>UserList</servlet-name>
+		<url-pattern>/UserList</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Connect</servlet-name>
+		<url-pattern>/Connect</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Link</servlet-name>
+		<url-pattern>/Link</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Chat</servlet-name>
+		<url-pattern>/Chat</url-pattern>
+	</servlet-mapping>
+
+</web-app>
