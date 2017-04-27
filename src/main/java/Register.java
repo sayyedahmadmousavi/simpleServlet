@@ -35,8 +35,15 @@ public class Register extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("text/html");
+		
+		System.out.println(" ------------------  Register.java doget --------------");
 
 		Check.checkState(request, response);
+		
+		
+		System.out.println(" ------------------  Register.java doget --------------");
+		
+		
 		
 		request.getRequestDispatcher("/Register.html")
 		.forward(request, response);
@@ -59,9 +66,8 @@ public class Register extends HttpServlet {
 				rePassword);
 		boolean exist = isExist(username);
 
-		// response.sendRedirect("/simpleServlet/Link");
 		HttpSession session = request.getSession();
-		// session.setAttribute("login", Boolean.TRUE);
+
 		sendError(check, exist, request, response);
 
 		if (check) {
@@ -71,14 +77,11 @@ public class Register extends HttpServlet {
 				boolean add = addUser(firstname, lastname, username, password,
 						rePassword);
 				if (add) {
-					// request.getRequestDispatcher("Login.html").forward(request,
-					// response);
 					session.setAttribute("state", "online");
 					session.setAttribute("user", username);
 
 					response.sendRedirect("/simpleServlet/Link");
 
-					// response.sendRedirect("/simpleServlet/UserList");
 
 				}
 

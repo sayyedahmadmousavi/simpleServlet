@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -66,7 +65,7 @@ public class Connect extends HttpServlet {
 				User user = (User) iterator.next();
 				if (user.getUser().equals(userNmae)) {
 					
-					if (httpSession.getAttribute("state").equals("OnChat")) {
+					if (user.getState().equals("OnChat")) {
 						return true;
 
 					}
@@ -127,8 +126,15 @@ public class Connect extends HttpServlet {
 					.hasNext();) {
 
 				User user = (User) iterator.next();
-				httpSession.setAttribute("state", "OnChat");
-				session.update(user);
+//				httpSession.setAttribute("state", "OnChat");
+				for (String userName : users) {
+					if (user.getUser().equals(userName)) {
+						user.setState("onChat");
+						
+						session.update(user);
+					}
+				}
+				
 			}
 			tx.commit();
 		} catch (HibernateException e) {
@@ -157,9 +163,9 @@ public class Connect extends HttpServlet {
 						.hasNext();) {
 
 					User user = (User) iterator.next();
-					if (!userName.equals(user.getUser())) {
+					if (userName.equals(user.getUser())) {
 						if (user.getUser().equals(string)
-								&& httpSession.getAttribute("state").equals("online")) {
+								&& user.getState().equals("online")) {
 							res.add(user.getUser());
 
 						}

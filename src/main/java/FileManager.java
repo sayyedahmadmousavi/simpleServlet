@@ -20,10 +20,10 @@ public class FileManager {
 
 	}
 
-	void write(byte[] b) {
+	public void write(byte[] b) {
 		try {
-			onf = new FileOutputStream(getSrcFile() + "/" + getFileName()
-					+ getFileType());
+			onf = new FileOutputStream(getSrcFile() + "\\" + getFileName()
+					+ getFileType(),true);
 			onf.write(b);
 			onf.close();
 		} catch (IOException e) {
@@ -32,7 +32,7 @@ public class FileManager {
 		}
 	}
 
-	String read() {
+	public String read() {
 		String text = "";
 		try {
 			inf = new FileInputStream(getSrcFile() + "/" + getFileName()

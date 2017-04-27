@@ -40,43 +40,15 @@ public class Login extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-		// String firstname = request.getParameter("firstname");
-		// String lastname = request.getParameter("lastname");
-		// String password = request.getParameter("password");
-		//
-		// if (firstname == null || lastname == null || firstname == null
-		// || lastname.length() < 1 || password.length() < 1) {
-		// String message = "Hello World";
-		// request.setAttribute("message", message);
-		//
-		// request.getRequestDispatcher("hello.jsp")
-		// .forward(request, response);
-		//
-		// request.getRequestDispatcher("Login.html")
-		// .forward(request, response);
-		//
-		// } else {
-		// String message = firstname + "  " + lastname;
-		//
-		// PrintWriter out = response.getWriter();
-		// out.println(message);
-		//
-		// }
 
 		response.setContentType("text/html");
-		// HttpSession session = request.getSession();
-		//
-		//
-		//
-		//
-		// if (session.getAttribute("login") == Boolean.TRUE) {
-		// response.sendRedirect("/simpleServlet/Link");
-		// }else{
-		// request.getRequestDispatcher("/Login.html").forward(request,
-		// response);
-		// }
+
+		System.out.println(" ------------------  Login.java doget --------------");
 
 		Check.checkState(request, response);
+
+		System.out.println(" ------------------  Login.java doget --------------");
+
 		request.getRequestDispatcher("/Login.html").forward(request, response);
 
 	}
@@ -97,25 +69,20 @@ public class Login extends HttpServlet {
 		checkPass = Check.checkUserPass(username, password);
 		exist = Check.isExist(username);
 		error = sendError(checkField, checkPass, exist, request, response);
-		// response.getWriter().print(checkField+" "+checkPass+" "+exist+" "+error);;
+
 		HttpSession session = request.getSession();
-//		if (session.getAttribute("login") == Boolean.TRUE) {
-//			response.sendRedirect("/simpleServlet/Link");
-//		} else {
-			if (!error) {
+
+		if (!error) {
 				if (checkField) {
 					if (exist) {
 						if (checkPass) {
-							// response.sendRedirect("/simpleServlet/UserList");
-							// response.sendRedirect("/simpleServlet/Link");
 
 							session.setAttribute("user", username);
 
 							session.setAttribute("state", "online");
 
 							response.sendRedirect("/simpleServlet/Link");
-							// request.getRequestDispatcher("/Link").forward(request,
-							// response);
+							
 						}
 					}
 

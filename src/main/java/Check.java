@@ -102,35 +102,63 @@ public class Check {
 			HttpServletResponse response) {
 
 		boolean res = false;
+
 		try {
+
 			HttpSession httpSession = request.getSession();
-			String attribute = (String) httpSession.getAttribute("state");
+			String state = (String) httpSession.getAttribute("state");
+			String userName = (String) httpSession.getAttribute("user");
+
+			SessionFactory sessionFactory;
+			sessionFactory = new Configuration().configure()
+					.buildSessionFactory();
+			Session session = sessionFactory.openSession();
+			Transaction tx = null;
+			try {
+				tx = session.beginTransaction();
+				List userList = session.createQuery("FROM User").list();
+				ff: for (Iterator iterator = userList.iterator(); iterator
+						.hasNext();) {
+
+					User user = (User) iterator.next();
+					if (user.getUser().equals(userName)) {
+
+					}
+
+				}
+				tx.commit();
+			} catch (HibernateException e) {
+				if (tx != null)
+					tx.rollback();
+				e.printStackTrace();
+			} finally {
+				session.close();
+			}
 
 			Enumeration<String> attributeNames = httpSession
 					.getAttributeNames();
-			System.out.println("---------------------- check State ---------------------");
+			System.out
+					.println("---------------------- check State ---------------------");
 			while (attributeNames.hasMoreElements()) {
 				String nextElement = attributeNames.nextElement();
-				if (nextElement.equals("login")) {
-					httpSession.removeAttribute("login");
-				}
-//				String attribute2 = (String )httpSession.getAttribute(nextElement);
-				System.out.println(nextElement+"   "+ httpSession.getAttribute(nextElement));
+
+				System.out.println(nextElement + "   "
+						+ httpSession.getAttribute(nextElement));
 			}
 
-			if (attribute == null) {
+			if (state == null) {
 
 				httpSession.setAttribute("state", "");
 
 			} else
 
-			if (attribute.equals("online")) {
+			if (state.equals("online")) {
 				System.out.println("online");
 				res = true;
 				request.getRequestDispatcher("/Link")
 						.forward(request, response);
 
-			} else if (attribute.equals("onChat")) {
+			} else if (state.equals("onChat")) {
 				System.out.println("onChat");
 				res = true;
 				request.getRequestDispatcher("/Chat")
