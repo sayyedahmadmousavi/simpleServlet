@@ -38,20 +38,28 @@ public class UserList extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		
-		HttpSession session = request.getSession();
-//		session
+		try {
+			HttpSession session = request.getSession();
+			User user = (User) session.getAttribute("user");
+
+			System.out.println("------------- UserList.doGet ------------- "+user.getUser());
+//			session
 
 
-		String message = getAllUser(session);
-		request.setAttribute("message" , message);
-		
-		response.getWriter().println(message);
-//		request.getRequestDispatcher("UserList.jsp").forward(request,response);
+			String createHtmlFile = getAllUser();
+//			request.setAttribute("message" , createHtmlFile);
+			
+			response.getWriter().println(createHtmlFile);
+//			request.getRequestDispatcher("UserList.jsp").forward(request,response);
+			
+		} catch (Exception e) {
+			new Index().doGet(request, response);
+			
+		}
 
 	}
 
-	private String getAllUser(HttpSession httpSession) {
+	private String getAllUser() {
 		// TODO Auto-generated method stub
 		String res = "<!DOCTYPE html>" + "<html>" + " <head>"
 				+ " <link rel=\"stylesheet\" href=\"style.css\">" + " </head>"

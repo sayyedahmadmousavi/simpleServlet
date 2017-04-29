@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,6 +11,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 
 /**
  * Servlet implementation class Chat
@@ -19,11 +27,19 @@ public class Chat extends HttpServlet {
 	private FileManager fileManager;
 
 	/**
+	 * @param string
 	 * @see HttpServlet#HttpServlet()
 	 */
+	public Chat(String string) {
+		super();
+		fileManager = new FileManager(
+				"E:\\ahmad\\lunas\\simpleServlet\\src\\main\\resources");
+		fileManager.setFileName(string);
+
+	}
+
 	public Chat() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -33,25 +49,38 @@ public class Chat extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		fileManager = new FileManager(
-				"E:\\ahmad\\lunas\\simpleServlet\\src\\main\\resources");
-		fileManager.setFileName("55");
-		
 		HttpSession session = request.getSession();
+		User user = (User) session.getAttribute("user");
+		System.out.println("------------- Chat.doGet ------------- "
+				+ user.getUser());
+		setFile(request, response);
 
-		session.setAttribute("state", "onChat");
-		String userName = (String) session.getAttribute("user");
+		// session.setAttribute("state", "onChat");
 
 		request.getParameterNames();
 		String text = "";
 		String text2 = "";
 		if (request.getParameter("Text") == null) {
-		} else {
+		} else if (request.getParameter("Text").length()>0) {
+			
+		
 
-			text2 = userName + " : " + request.getParameter("Text") + "\n";
+			text2 = user.getUser() + " : " + request.getParameter("Text")
+					+ "\n";
 		}
-		fileManager.write(text2.getBytes());
-		text += fileManager.read();
+		
+		
+		byte[] bytes = text2.getBytes();
+		try {
+			fileManager.write(bytes);
+			text += fileManager.read();
+	
+		} catch (NullPointerException e) {
+			// TODO: handle exception
+			setFile(request, response);
+			new Chat().doGet(request, response);
+			
+		}
 		
 		text += text2;
 
@@ -69,20 +98,79 @@ public class Chat extends HttpServlet {
 			Object obj = e.nextElement();
 			String fieldName = (String) obj;
 			String fieldValue = request.getParameter(fieldName);
-			System.out.println(fieldName + " : " + fieldValue);
+			 System.out.println(fieldName + " : " + fieldValue);
 			fieldNameList.add(fieldName);
 
 		}
+
 		if (fieldNameList.contains("logOutButton")) {
-			session.setAttribute("state", "ofline");
-			request.getRequestDispatcher("/").forward(request, response);
+
+			// session.setAttribute("state", "ofline");
+			Check.changeState(request, response, "ofline");
+			new Index().doGet(request, response);
+			
+			// request.getRequestDispatcher("/").forward(request, response);
 		} else if (fieldNameList.contains("leaveChaatButton")) {
-			session.setAttribute("state", "online");
-			request.getRequestDispatcher("/Link").forward(request, response);
+
+			// session.setAttribute("state", "online");
+			Check.changeState(request, response, "online");
+			new Link().doGet(request, response);
+			// request.getRequestDispatcher("/Link").forward(request, response);
+		}else{
+			
+			response.getWriter().print(htmlFile);
 		}
 
-		System.out.println(fieldNameList.size());
-		response.getWriter().print(htmlFile);
+		// System.out.println(fieldNameList.size());
+	}
+
+	private void setFile(HttpServletRequest request,
+			HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		try {
+			HttpSession httpSession = request.getSession();
+			User user1 = (User) httpSession.getAttribute("user");
+			SessionFactory sessionFactory;
+			sessionFactory = new Configuration().configure()
+					.buildSessionFactory();
+			Session session = sessionFactory.openSession();
+			Transaction tx = null;
+
+			try {
+				tx = session.beginTransaction();
+				List userList = session.createQuery("FROM User").list();
+
+				ff: for (Iterator iterator = userList.iterator(); iterator
+						.hasNext();) {
+
+					User user = (User) iterator.next();
+
+					System.out.println(user.getUser() + ":" + user.getState());
+
+					if (user.getUser().equals(user1.getUser())) {
+						
+						fileManager = new FileManager(
+								"E:\\ahmad\\lunas\\simpleServlet\\src\\main\\resources");
+						fileManager.setFileName(user.getFile());
+
+						
+					}
+
+				}
+				tx.commit();
+			} catch (HibernateException e) {
+				if (tx != null)
+					tx.rollback();
+				e.printStackTrace();
+			} finally {
+				session.close();
+
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
 	}
 
 	private String creatHTMLFile(String text) {
@@ -93,8 +181,9 @@ public class Chat extends HttpServlet {
 				+ " <link rel=\"stylesheet\" href=\"style.css\">"
 				+ " </head>"
 				+ " <body>"
-				+ " <div		style=\"overflow-y: scroll; width: 500px; height: 500px; line-height: 1em; overflow: auto; padding: 5px;\">";
-		String tableRow = "   <table> ";
+				+ " <div style=\"overflow-y: scroll; width: 500px; height: 500px; line-height: 1em; overflow: auto; padding: 5px;\">";
+		String tableRow = "   <table > ";
+
 		String[] split = text.split("\n");
 		for (String string : split) {
 			if (!string.contains("null")) {
@@ -131,7 +220,7 @@ public class Chat extends HttpServlet {
 
 		}
 
-		tableRow += "  </table> </div>  ";
+		tableRow += "  </table></div>";
 
 		String formChat = "<form action=\"/simpleServlet/Chat\" method=\"GET\">"
 				+ "Your Text:<br> <input type=\"text\" name=\"Text\" autofocus=\"autofocus\"> "

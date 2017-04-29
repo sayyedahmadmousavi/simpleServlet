@@ -40,71 +40,149 @@ public class Login extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 
-
 		response.setContentType("text/html");
+		HttpSession session = request.getSession();
+		User user = null;
+		String state = Check.checkState(request, response);
 
-		System.out.println(" ------------------  Login.java doget --------------");
+		try {
+			user = (User) session.getAttribute("user");
+			System.out.println("------------------ login.doGet -------------- "
+					+ user.getUser());
 
-		Check.checkState(request, response);
+			if (state.equals("online")) {
+				System.out.println("------------------ online -------------- ");
 
-		System.out.println(" ------------------  Login.java doget --------------");
+				Link link = new Link();
+				link.doGet(request, response);
+			} else if (state.equals("onChat")) {
+				System.out.println("------------------ onchat -------------- ");
 
-		request.getRequestDispatcher("/Login.html").forward(request, response);
+				Chat chat = new Chat();
+				chat.doGet(request, response);
+			} else {
 
+				request.getRequestDispatcher("Login.html").forward(request,
+						response);
+
+			}
+		} catch (NullPointerException e) {
+			request.getRequestDispatcher("Login.html").forward(request,
+					response);
+
+		}
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		String password = request.getParameter("password");
-		String username = request.getParameter("username");
-
-		boolean checkField = false;
-		boolean checkPass = false;
-		boolean exist = false;
-		boolean error = true;
-
-		checkField = Check.checkField(username, password);
-		checkPass = Check.checkUserPass(username, password);
-		exist = Check.isExist(username);
-		error = sendError(checkField, checkPass, exist, request, response);
-
 		HttpSession session = request.getSession();
+		try {
+			try {
+				User user1 = (User) session.getAttribute("user");
+				System.out.println("------------- Login.doPost -------------"
+						+ user1.getUser());
 
-		if (!error) {
-				if (checkField) {
-					if (exist) {
-						if (checkPass) {
+			} catch (NullPointerException e) {
+				// TODO: handle exception
+				System.out.println("NullPointerException");
+				System.out.println("------------- Login.doPost -------------");
 
-							session.setAttribute("user", username);
+			}
 
-							session.setAttribute("state", "online");
+			String password = request.getParameter("password");
+			String userName = request.getParameter("username");
 
-							response.sendRedirect("/simpleServlet/Link");
-							
-						}
+			boolean checkField = true;
+			boolean checkPass = false;
+			boolean exist = false;
+
+			if ((!Check.checkField(userName))
+					|| (!Check.checkUserName(userName))
+					|| (!Check.checkField(password))) {
+				checkField = false;
+			}
+
+			exist = Check.isExist(userName);
+			if (exist) {
+				System.out.println(" >>>>> " + exist);
+				checkPass = Check.checkUserPass(userName, password);
+			}
+
+			System.out.println(checkPass);
+
+			if (checkField) {
+				if (exist) {
+					if (checkPass) {
+
+						session.setAttribute("user", getUser(userName));
+
+						response.sendRedirect("/simpleServlet/Link");
+
 					}
-
 				}
 
-//			}
+			}
+			sendError(checkField, checkPass, exist, request, response);
 
+		} catch (Exception e) {
+			// TODO: handle exception
 		}
 	}
 
-	private boolean sendError(boolean checkField, boolean checkPass,
+	private User getUser(String userName) {
+		User res = new User();
+
+		SessionFactory sessionFactory;
+		sessionFactory = new Configuration().configure().buildSessionFactory();
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			List userList = session.createQuery("FROM User").list();
+			ff: for (Iterator iterator = userList.iterator(); iterator
+					.hasNext();) {
+
+				User user = (User) iterator.next();
+				if (user.getUser().equals(userName)) {
+
+					res.setFirstName(user.getFirstName());
+					res.setLastName(user.getLastName());
+					res.setPass(user.getPass());
+					user.setState("online");
+					res.setState(user.getState());
+					
+					session.update(user);
+					
+					res=user;
+
+				}
+			}
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null)
+				tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+
+		return res;
+	}
+
+	private void sendError(boolean checkField, boolean checkPass,
 			boolean exist, HttpServletRequest request,
 			HttpServletResponse response) {
 		String error = "";
 		if (!checkField) {
-			error += "Please carefully fill field<br>";
+			error += "Please carefully fill field\n";
 		}
 		if (!exist) {
-			error += "This This User name does not exist<br>";
-		}
+			error += "This This User name does not exist\n";
+		}else
 		if (!checkPass) {
-			error += "Password wrong<br>";
+			error += "Password wrong\n";
 		}
 
 		try {
@@ -116,12 +194,6 @@ public class Login extends HttpServlet {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		if (error.length() > 5) {
-			return true;
-		} else {
-			return false;
-
 		}
 
 	}

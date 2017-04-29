@@ -40,7 +40,22 @@
 		<description></description>
 		<servlet-class>Chat</servlet-class>
 	</servlet>
-
+	<servlet>
+		<servlet-name>Index</servlet-name>
+		<display-name>Index</display-name>
+		<description></description>
+		<servlet-class>Index</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>LogOut</servlet-name>
+		<display-name>LogOut</display-name>
+		<description></description>
+		<servlet-class>LogOut</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Index</servlet-name>
+		<url-pattern>/index.jsp</url-pattern>
+	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>Hello</servlet-name>
 		<url-pattern>/Hello</url-pattern>
@@ -64,6 +79,10 @@
 	<servlet-mapping>
 		<servlet-name>Chat</servlet-name>
 		<url-pattern>/Chat</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>LogOut</servlet-name>
+		<url-pattern>/LogOut</url-pattern>
 	</servlet-mapping>
 
 </web-app>

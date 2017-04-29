@@ -39,49 +39,32 @@ public class Connect extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		HttpSession session = request.getSession();
-		String userNmae = (String) session.getAttribute("user");
-		if (nowChat(userNmae,session)) {
-			request.getRequestDispatcher("Chat.html").forward(request,
-					response);
-		} else {
+		User user = null;
+		String state = Check.checkState(request, response);
 
-			request.getRequestDispatcher("Connect.html").forward(request,
-					response);
-		}
-	}
-
-	private boolean nowChat(String userNmae,HttpSession httpSession) {
-		boolean res = false;
-		SessionFactory sessionFactory;
-		sessionFactory = new Configuration().configure().buildSessionFactory();
-		Session session = sessionFactory.openSession();
-		Transaction tx = null;
 		try {
-			tx = session.beginTransaction();
-			List userList = session.createQuery("FROM User").list();
-			ff: for (Iterator iterator = userList.iterator(); iterator
-					.hasNext();) {
+			user = (User) session.getAttribute("user");
+			System.out
+					.println("------------------ Connect.doGet -------------- "
+							+ user.getUser());
 
-				User user = (User) iterator.next();
-				if (user.getUser().equals(userNmae)) {
-					
-					if (user.getState().equals("OnChat")) {
-						return true;
+			if (state.equals("online")) {
 
-					}
-				}
+				System.out.println("Connect.html");
+				response.sendRedirect("Connect.html");
 
+			} else if (state.equals("onChat")) {
+				System.out.println("------------------ onchat -------------- ");
+
+				Chat chat = new Chat();
+				chat.doGet(request, response);
 			}
-			tx.commit();
-		} catch (HibernateException e) {
-			if (tx != null)
-				tx.rollback();
-			e.printStackTrace();
-		} finally {
-			session.close();
+		} catch (NullPointerException e) {
+
+			new Index().doGet(request, response);
+
 		}
 
-		return res;
 	}
 
 	/**
@@ -92,49 +75,83 @@ public class Connect extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		HttpSession session = request.getSession();
-		String user = (String) session.getAttribute("user");
+		User user = (User) session.getAttribute("user");
+		System.out.println("------------- Connect.doPost -----------  {"
+				+ user.getUser() + "}");
+
+		int number = 0;
+		String parameter = "";
 		try {
-			int number = Integer.parseInt(request.getParameter("number"));
-		} catch (Exception e) {
+			number = Integer.parseInt(request.getParameter("number"));
+			parameter = request.getParameter("Users");
+
+		} catch (Exception exception) {
+			System.out.println(" error 1 ");
 			doGet(request, response);
 		}
-		try {
-			String parameter = request.getParameter("Users");
-			String[] split = parameter.split(" ");
-			ArrayList<String> users = check(split, user ,session);
-			boolean state = changeState(users,session);
-			if (state) {
-				
-				response.sendRedirect("/simpleServlet/Chat");
+
+		boolean res = false;
+
+		String[] split = parameter.split(" ");
+		ff: for (String string : split) {
+
+			if (string.equals(user.getUser())) {
+				res = true;
+				break ff;
 			}
-		} catch (Exception e) {
-			// TODO: handle exception
+
+		}
+
+		sendError(split, number, request, response);
+
+		System.out.println(split.length + " : " + number);
+		if (split.length == number/* &&/* !res */) {
+			ArrayList<String> users = check(split);
+			users.add(user.getUser());
+
+			changeAllUserState(users);
+			setFileName(users,user.getUser());
+			System.out.println(user.getUser());
+			// response.sendRedirect("/simpleServlet/Chat");
+			Chat chat = new Chat(user.getUser());
+			chat.doGet(request, response);
+
+		} else {
+			System.out.println(" error 2 ");
+			doGet(request, response);
+
 		}
 	}
 
-	private boolean changeState(ArrayList<String> users,HttpSession httpSession) {
+	private void setFileName(ArrayList<String> users, String fileName) {
 		// TODO Auto-generated method stub
-		boolean res = true;
 		SessionFactory sessionFactory;
 		sessionFactory = new Configuration().configure().buildSessionFactory();
 		Session session = sessionFactory.openSession();
 		Transaction tx = null;
+
 		try {
 			tx = session.beginTransaction();
 			List userList = session.createQuery("FROM User").list();
-			ff: for (Iterator iterator = userList.iterator(); iterator
-					.hasNext();) {
 
-				User user = (User) iterator.next();
-//				httpSession.setAttribute("state", "OnChat");
-				for (String userName : users) {
+			for (String userName : users) {
+
+				ff: for (Iterator iterator = userList.iterator(); iterator
+						.hasNext();) {
+
+					User user = (User) iterator.next();
+
+					System.out.println(user.getUser() + ":" + user.getState());
+
 					if (user.getUser().equals(userName)) {
-						user.setState("onChat");
 						
+						user.setFile(fileName);
 						session.update(user);
+
 					}
+
 				}
-				
+
 			}
 			tx.commit();
 		} catch (HibernateException e) {
@@ -143,17 +160,97 @@ public class Connect extends HttpServlet {
 			e.printStackTrace();
 		} finally {
 			session.close();
+
 		}
-		return res;
+		
 	}
 
-	private ArrayList<String> check(String[] split, String userName,HttpSession httpSession) {
+	private void changeAllUserState(ArrayList<String> users) {
+		// TODO Auto-generated method stub
+		SessionFactory sessionFactory;
+		sessionFactory = new Configuration().configure().buildSessionFactory();
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+
+		try {
+			tx = session.beginTransaction();
+			List userList = session.createQuery("FROM User").list();
+
+			for (String userName : users) {
+
+				ff: for (Iterator iterator = userList.iterator(); iterator
+						.hasNext();) {
+
+					User user = (User) iterator.next();
+
+					System.out.println(user.getUser() + ":" + user.getState());
+
+					if (user.getUser().equals(userName)
+							&& user.getState().equals("online")) {
+						
+						user.setState("onChat");
+						
+						session.update(user);
+
+					}
+
+				}
+
+			}
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null)
+				tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+
+		}
+
+	}
+
+	private void sendError(String[] split, int number,
+			HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		String error = "";
+		int a = 0;
+		for (String string : split) {
+			if (request.getSession().equals(string)) {
+				error += "dont use your user name for userName(s)\n";
+				a = 1;
+			}
+
+		}
+		if ((split.length - a) != number) {
+			error += "The number entered" + ", Enter the name";
+			a += 2;
+		}
+
+		// request.setAttribute("error", error);
+		try {
+			if (a > 0) {
+
+				System.out.println(error);
+				response.getWriter().print(error);
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private ArrayList<String> check(String[] split) {
 		ArrayList<String> res = new ArrayList<String>();
 
 		SessionFactory sessionFactory;
 		sessionFactory = new Configuration().configure().buildSessionFactory();
 		Session session = sessionFactory.openSession();
 		Transaction tx = null;
+
+		for (String string : split) {
+			System.out.println(string + "::::::::::: in split");
+		}
 
 		try {
 			for (String string : split) {
@@ -163,15 +260,22 @@ public class Connect extends HttpServlet {
 						.hasNext();) {
 
 					User user = (User) iterator.next();
-					if (userName.equals(user.getUser())) {
-						if (user.getUser().equals(string)
-								&& user.getState().equals("online")) {
-							res.add(user.getUser());
 
-						}
+					System.out.println(user.getUser() + ":" + user.getState());
+
+					// if (userName.equals(user.getUser())) {
+					if (user.getUser().equals(string)
+							&& user.getState().equals("online")) {
+						user.setState("onChat");
+						res.add(user.getUser());
+						session.update(user);
+						System.out.println(user.getUser() + " --------- "
+								+ user.getState());
 
 					}
+
 				}
+				// }
 			}
 			tx.commit();
 		} catch (HibernateException e) {
@@ -182,7 +286,6 @@ public class Connect extends HttpServlet {
 			session.close();
 
 		}
-		res.add(userName);
 
 		return res;
 	}

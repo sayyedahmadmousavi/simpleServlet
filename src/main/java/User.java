@@ -23,6 +23,8 @@ public class User {
 	private String pass;
 	@Column(name = "state")
 	private String state;
+	@Column(name = "file")
+	private String file;
 
 	public User() {
 	}
@@ -85,4 +87,11 @@ public class User {
 		this.state = state;
 	}
 
+	public String getFile() {
+		return file;
+	}
+
+	public void setFile(String file) {
+		this.file = file;
+	}
 }

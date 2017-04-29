@@ -35,58 +35,131 @@ public class Register extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("text/html");
-		
-		System.out.println(" ------------------  Register.java doget --------------");
+		HttpSession session = request.getSession();
+		User user = null;
+		try {
+			user = (User) session.getAttribute("user");
+			String state = user.getState();
+			System.out
+					.println("------------------ Register.doGet -------------- "
+							+ user.getUser());
 
-		Check.checkState(request, response);
-		
-		
-		System.out.println(" ------------------  Register.java doget --------------");
-		
-		
-		
-		request.getRequestDispatcher("/Register.html")
-		.forward(request, response);
+			if (state.equals("online")) {
+				System.out.println("------------------ online -------------- ");
+
+				// request.getRequestDispatcher("/Link")
+				// .forward(request, response);
+				Link link = new Link();
+				link.doGet(request, response);
+			} else if (state.equals("onChat")) {
+				System.out.println("------------------ onchat -------------- ");
+
+				// request.getRequestDispatcher("/Chat")
+				// .forward(request, response);
+				Chat chat = new Chat();
+				chat.doGet(request, response);
+
+				// }
+				// else if (state.equals("ofline")) {
+				// System.out.println("------------------ ofline -------------- ");
+				//
+				// request.getRequestDispatcher("/").forward(request, response);
+			} else {
+
+				// Register register = new Register();
+				// register.d
+				request.getRequestDispatcher("Register.html").forward(request,
+						response);
+
+			}
+		} catch (NullPointerException e) {
+			// TODO: handle exception
+			request.getRequestDispatcher("Register.html").forward(request,
+					response);
+
+		}
+
+		// Check.checkState(request, response);
+
+		// String state = Check.checkState(request, response);
 
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		response.setContentType("text/html");
-
-		String firstname = request.getParameter("firstname");
-		String lastname = request.getParameter("lastname");
-		String username = request.getParameter("username");
-		String password = request.getParameter("password");
-		String rePassword = request.getParameter("re-password");
-
-		boolean check = check(firstname, lastname, username, password,
-				rePassword);
-		boolean exist = isExist(username);
-
 		HttpSession session = request.getSession();
+		try {
+			try {
+				User user = (User) session.getAttribute("user");
+				System.out
+						.println("------------- Register.doPost -------------"
+								+ user.getUser());
 
-		sendError(check, exist, request, response);
-
-		if (check) {
-			if (!exist) {
-
-				session.setAttribute("user", username);
-				boolean add = addUser(firstname, lastname, username, password,
-						rePassword);
-				if (add) {
-					session.setAttribute("state", "online");
-					session.setAttribute("user", username);
-
-					response.sendRedirect("/simpleServlet/Link");
-
-
-				}
+			} catch (Exception e) {
+				// TODO: handle exception
+				System.out
+						.println("------------- Register.doPost -------------");
 
 			}
 
+			String firstName = request.getParameter("firstname");
+			String lastName = request.getParameter("lastname");
+			String userName = request.getParameter("username");
+			String password = request.getParameter("password");
+			String rePassword = request.getParameter("re-password");
+
+			boolean checkField = true;
+			if ((!Check.checkField(firstName)) || (!Check.checkField(lastName))
+					|| (!Check.checkField(password))
+					|| (!Check.checkField(rePassword))
+					|| (!Check.checkField(userName))
+					|| (!Check.checkUserName(userName))) {
+				checkField = false;
+			}
+
+			// boolean check = check(request, response, firstName, lastName,
+			// userName,
+			// password, rePassword);
+
+			// HttpSession session = request.getSession();
+			boolean exist = false;
+			if (checkField) {
+
+				exist = Check.isExist(userName);
+				System.out.println(checkField + " d " + exist + " dd ");
+			}
+
+			System.out.println("9999999999999995555555555555");
+
+			if (checkField) {
+
+				sendError(checkField, exist, request, response);
+
+				if (!exist) {
+					String state = "online";
+
+					boolean add = addUser(firstName, lastName, userName,
+							password, state);
+					if (add) {
+
+						session.setAttribute("user", new User(firstName,
+								lastName, userName, password, state));
+						// session.setAttribute("state", "online");
+
+						response.sendRedirect("/simpleServlet/Link");
+
+					}
+
+				}
+
+			} else {
+				sendError(checkField, exist, request, response);
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
 		}
 	}
 
@@ -110,52 +183,15 @@ public class Register extends HttpServlet {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-	}
-
-	private boolean isExist(String username) {
-		boolean res = false;
-		SessionFactory sessionFactory;
-		sessionFactory = new Configuration().configure().buildSessionFactory();
-		Session session = sessionFactory.openSession();
-		Transaction tx = null;
-		try {
-			tx = session.beginTransaction();
-			List userList = session.createQuery("FROM User").list();
-			ff: for (Iterator iterator = userList.iterator(); iterator
-					.hasNext();) {
-
-				User user = (User) iterator.next();
-				if (user.getUser().equals(username)) {
-					res = true;
-
-					tx.commit();
-
-					// session.close();
-
-					return res;
-				}
-			}
-			tx.commit();
-		} catch (HibernateException e) {
-			if (tx != null)
-				tx.rollback();
-			e.printStackTrace();
-		} finally {
-			session.close();
-		}
-
-		return false;
 	}
 
 	private boolean addUser(String firstname, String lastname, String username,
-			String password, String rePassword) {
+			String password, String state) {
 		boolean res = false;
 
-		System.out.println("adding user was started");
 		SessionFactory sessionFactory;
 		Configuration configuration = new Configuration();
 		Configuration configure = configuration.configure();
@@ -168,8 +204,8 @@ public class Register extends HttpServlet {
 		try {
 			tx = session.beginTransaction();
 
-			User user = new User(firstname, lastname, username, password,
-					"online");
+			User user = new User(firstname, lastname, username, password, state);
+
 			session.save(user);
 			tx.commit();
 			res = true;
@@ -181,23 +217,9 @@ public class Register extends HttpServlet {
 			session.close();
 		}
 
-		System.out.println("user added");
+		System.out.println("added ");
 		return res;
 
 	}
 
-	private boolean check(String firstname, String lastname, String username,
-			String password, String rePassword) {
-		boolean res = true;
-		if (firstname.length() < 1 || firstname == null
-				|| firstname.length() < 1 || firstname == null
-				|| lastname.length() < 1 || lastname == null
-				|| username.length() < 1 || username == null
-				|| username.contains(" ") || password.length() < 1
-				|| password == null || rePassword.length() < 1
-				|| rePassword == null || (!password.equals(rePassword))) {
-			res = false;
-		}
-		return res;
-	}
 }

@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -16,14 +17,17 @@ import org.hibernate.cfg.Configuration;
 
 public class Check {
 
-	static boolean checkField(String username, String password) {
+	static boolean checkField(String field) {
 		boolean res = false;
 
-		if (username.length() > 0 || password.length() > 0) {
-			return true;
+		try {
+			if (field.length() > 0) {
+				return true;
+			}
 
+		} catch (NullPointerException e) {
+			return false;
 		}
-
 		return res;
 	}
 
@@ -62,6 +66,26 @@ public class Check {
 		return false;
 	}
 
+	static boolean checkUserName(String userName) {
+		// TODO Auto-generated method stub
+		try {
+			for (char c : userName.toCharArray()) {
+				if ((c <= '9' && c >= '0') || (c >= 'A' && c <= 'Z')
+						|| (c >= 'a' && c <= 'z')) {
+
+				} else {
+					return false;
+				}
+
+			}
+		} catch (NullPointerException e) {
+			// TODO: handle exception
+
+		}
+
+		return true;
+	}
+
 	static boolean checkUserPass(String username, String password) {
 		boolean res = false;
 		SessionFactory sessionFactory;
@@ -79,11 +103,8 @@ public class Check {
 						&& user.getPass().equals(password)) {
 					res = true;
 
-					tx.commit();
+					break ff;
 
-					// session.close();
-
-					return res;
 				}
 			}
 			tx.commit();
@@ -98,21 +119,60 @@ public class Check {
 		return res;
 	}
 
-	static boolean checkState(HttpServletRequest request,
+	static void changeState(HttpServletRequest request,
+			HttpServletResponse response, String state) {
+
+		HttpSession httpSession = request.getSession();
+		User user1 = (User) httpSession.getAttribute("user");
+
+		SessionFactory sessionFactory = new Configuration().configure()
+				.buildSessionFactory();
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+			List userList = session.createQuery("FROM User").list();
+			ff: for (Iterator iterator = userList.iterator(); iterator
+					.hasNext();) {
+
+				User user = (User) iterator.next();
+				if (user.getUser().equals(user1.getUser())) {
+					user.setState(state);
+
+					session.update(user);
+				}
+			}
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null)
+				tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+
+	}
+
+	static String checkState(HttpServletRequest request,
 			HttpServletResponse response) {
 
-		boolean res = false;
+		String res = "";
 
+		HttpSession httpSession = request.getSession();
 		try {
+			// String state = (String) httpSession.getAttribute("state");
+			User user1 = (User) httpSession.getAttribute("user");
 
-			HttpSession httpSession = request.getSession();
-			String state = (String) httpSession.getAttribute("state");
-			String userName = (String) httpSession.getAttribute("user");
-
-			SessionFactory sessionFactory;
-			sessionFactory = new Configuration().configure()
+			SessionFactory sessionFactory = new Configuration().configure()
 					.buildSessionFactory();
+
+			Configuration configuration = new Configuration();
+			configuration.configure();
+			SessionFactory buildSessionFactory = configuration
+					.buildSessionFactory();
+			sessionFactory = buildSessionFactory;
 			Session session = sessionFactory.openSession();
+
 			Transaction tx = null;
 			try {
 				tx = session.beginTransaction();
@@ -121,7 +181,8 @@ public class Check {
 						.hasNext();) {
 
 					User user = (User) iterator.next();
-					if (user.getUser().equals(userName)) {
+					if (user.getUser().equals(user1.getUser())) {
+						res = user.getState();
 
 					}
 
@@ -135,41 +196,16 @@ public class Check {
 				session.close();
 			}
 
-			Enumeration<String> attributeNames = httpSession
-					.getAttributeNames();
-			System.out
-					.println("---------------------- check State ---------------------");
-			while (attributeNames.hasMoreElements()) {
-				String nextElement = attributeNames.nextElement();
-
-				System.out.println(nextElement + "   "
-						+ httpSession.getAttribute(nextElement));
+		} catch (NullPointerException e) {
+			// TODO: handle exception
+			try {
+				new Index().doGet(request, response);
+			} catch (ServletException | IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 
-			if (state == null) {
-
-				httpSession.setAttribute("state", "");
-
-			} else
-
-			if (state.equals("online")) {
-				System.out.println("online");
-				res = true;
-				request.getRequestDispatcher("/Link")
-						.forward(request, response);
-
-			} else if (state.equals("onChat")) {
-				System.out.println("onChat");
-				res = true;
-				request.getRequestDispatcher("/Chat")
-						.forward(request, response);
-			}
-
-		} catch (ServletException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return res;
 	}
-
 }
